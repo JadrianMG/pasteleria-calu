@@ -2,141 +2,175 @@ import React, { useState } from "react";
 import logo from "/Logo Reposteria Calu.png";
 import qr from "/reposteriacalu_qr.png";
 
-const bases = ["Vainilla", "Chocolate", "Red Velvet"];
-const rellenos = ["Dulce de leche", "Crema", "Ganache", "Frutas"];
-const coberturas = ["Chantilly", "Fondant", "Buttercream"];
-const adornos = ["Frutillas", "Granola", "Confites", "Flores"];
-
-const precios = {
-  base: 1000,
-  relleno: 800,
-  cobertura: 1200,
-  adorno: 200,
-  peso: 500,
-};
+const productos = ["Torta personalizada", "Tarta"];
+const tiposTarta = ["Pastaflora", "Toffi", "CocoTart", "Lemon Pai", "Ricota Tart", "Cheesecake"];
+const rellenosPastaflora = ["Dulce de leche", "Membrillo", "Batata", "Frutilla"];
 
 export default function App() {
-  const [pastel, setPastel] = useState({
-    base: "Vainilla",
-    relleno: "Dulce de leche",
-    cobertura: "Chantilly",
-    adornos: [],
-    peso: 1,
-    altura: 10,
-    ancho: 20,
+  const [producto, setProducto] = useState("Torta personalizada");
+  const [textoTorta, setTextoTorta] = useState("");
+  const [tarta, setTarta] = useState({
+    tamaño: "8 cm",
+    tipo: "Pastaflora",
+    combinada: ["", "", "", ""],
+    relleno: "",
+    rellenosCombinados: ["", "", "", ""]
   });
 
-  const toggleAdorno = (adorno) => {
-    setPastel((prev) => {
-      const nuevos = prev.adornos.includes(adorno)
-        ? prev.adornos.filter((a) => a !== adorno)
-        : [...prev.adornos, adorno];
-      return { ...prev, adornos: nuevos };
-    });
-  };
-
-  const calcularPrecio = () => {
-    const { adornos, peso } = pastel;
-    return (
-      precios.base +
-      precios.relleno +
-      precios.cobertura +
-      adornos.length * precios.adorno +
-      peso * precios.peso
-    );
+  const calcularPrecioTarta = () => {
+    if (tarta.tamaño === "8 cm") return 3000;
+    if (tarta.tamaño === "22 cm combinada") return 12000;
+    return tarta.tipo === "Pastaflora" ? 7000 : 10000;
   };
 
   const generarMensaje = () => {
-    return encodeURIComponent(
-      `Hola, me gustaría hacerte un pedido...
+    if (producto === "Torta personalizada") {
+      return encodeURIComponent(
+        `Hola, me gustaría hacerte un pedido...
 
 Torta personalizada:
-- Bizcochuelo: ${pastel.base}
-- Relleno: ${pastel.relleno}
-- Cobertura: ${pastel.cobertura}
-- Adornos: ${pastel.adornos.join(", ") || "Ninguno"}
-- Peso: ${pastel.peso} kg
-- Altura: ${pastel.altura} cm
-- Ancho: ${pastel.ancho} cm
+- Texto: ${textoTorta}`
+      );
+    }
 
-Precio estimado: $${calcularPrecio()}`
+    if (tarta.tamaño === "22 cm combinada") {
+      const combinaciones = tarta.combinada
+        .map((tipo, i) => {
+          if (!tipo) return null;
+          const relleno = tipo === "Pastaflora" ? ` (${tarta.rellenosCombinados[i]})` : "";
+          return `1/4 ${tipo}${relleno}`;
+        })
+        .filter(Boolean)
+        .join(" + ");
+
+      return encodeURIComponent(
+        `Hola, me gustaría pedir una Tarta combinada de 22 cm:
+- Combinación: ${combinaciones}
+- Precio estimado: $${calcularPrecioTarta()}`
+      );
+    }
+
+    const relleno = tarta.tipo === "Pastaflora" ? `
+- Relleno: ${tarta.relleno}` : "";
+
+    return encodeURIComponent(
+      `Hola, me gustaría pedir una Tarta:
+- Tipo: ${tarta.tipo}
+- Tamaño: ${tarta.tamaño}${relleno}
+- Precio estimado: $${calcularPrecioTarta()}`
     );
   };
 
   return (
     <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
       <img src={logo} alt="Logo Calu" style={{ height: "80px", marginBottom: "1rem" }} />
-      <h1>Pastelería Calu - Armá tu pastel</h1>
+      <h1>Pastelería Calu - Pedí tu producto</h1>
 
       <div>
-        <label>Bizcochuelo: </label>
-        <select onChange={(e) => setPastel({ ...pastel, base: e.target.value })}>
-          {bases.map((b) => (
-            <option key={b}>{b}</option>
+        <label>¿Qué querés pedir? </label>
+        <select value={producto} onChange={(e) => setProducto(e.target.value)}>
+          {productos.map((p) => (
+            <option key={p}>{p}</option>
           ))}
         </select>
       </div>
 
-      <div>
-        <label>Relleno: </label>
-        <select onChange={(e) => setPastel({ ...pastel, relleno: e.target.value })}>
-          {rellenos.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
-      </div>
+      {producto === "Torta personalizada" && (
+        <div>
+          <label>Texto personalizado: </label>
+          <input
+            type="text"
+            value={textoTorta}
+            onChange={(e) => setTextoTorta(e.target.value)}
+            placeholder="Ej: ¡Feliz cumple Lu!"
+          />
+        </div>
+      )}
 
-      <div>
-        <label>Cobertura: </label>
-        <select onChange={(e) => setPastel({ ...pastel, cobertura: e.target.value })}>
-          {coberturas.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </div>
+      {producto === "Tarta" && (
+        <div>
+          <label>Tamaño: </label>
+          <select
+            value={tarta.tamaño}
+            onChange={(e) =>
+              setTarta({ ...tarta, tamaño: e.target.value, tipo: "", combinada: ["", "", "", ""] })
+            }
+          >
+            <option>8 cm</option>
+            <option>22 cm</option>
+            <option>22 cm combinada</option>
+          </select>
 
-      <div>
-        <p>Adornos:</p>
-        {adornos.map((a) => (
-          <label key={a} style={{ marginRight: "1rem" }}>
-            <input
-              type="checkbox"
-              checked={pastel.adornos.includes(a)}
-              onChange={() => toggleAdorno(a)}
-            />
-            {a}
-          </label>
-        ))}
-      </div>
+          {tarta.tamaño === "22 cm combinada" ? (
+            <div>
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i}>
+                  <label>{`1/4 tipo ${i + 1}: `}</label>
+                  <select
+                    value={tarta.combinada[i]}
+                    onChange={(e) => {
+                      const nuevas = [...tarta.combinada];
+                      nuevas[i] = e.target.value;
+                      setTarta({ ...tarta, combinada: nuevas });
+                    }}
+                  >
+                    <option value="">(ninguno)</option>
+                    {tiposTarta.map((t) => (
+                      <option key={t}>{t}</option>
+                    ))}
+                  </select>
 
-      <div>
-        <label>Peso (kg): </label>
-        <input
-          type="number"
-          value={pastel.peso}
-          onChange={(e) => setPastel({ ...pastel, peso: parseFloat(e.target.value) })}
-        />
-      </div>
+                  {tarta.combinada[i] === "Pastaflora" && (
+                    <div>
+                      <label>Relleno pastaflora #{i + 1}: </label>
+                      <select
+                        value={tarta.rellenosCombinados[i]}
+                        onChange={(e) => {
+                          const nuevosRellenos = [...tarta.rellenosCombinados];
+                          nuevosRellenos[i] = e.target.value;
+                          setTarta({ ...tarta, rellenosCombinados: nuevosRellenos });
+                        }}
+                      >
+                        {rellenosPastaflora.map((r) => (
+                          <option key={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <label>Tipo de tarta: </label>
+              <select
+                value={tarta.tipo}
+                onChange={(e) => setTarta({ ...tarta, tipo: e.target.value })}
+              >
+                {tiposTarta.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
 
-      <div>
-        <label>Altura (cm): </label>
-        <input
-          type="number"
-          value={pastel.altura}
-          onChange={(e) => setPastel({ ...pastel, altura: parseFloat(e.target.value) })}
-        />
-      </div>
+              {tarta.tipo === "Pastaflora" && (
+                <div>
+                  <label>Relleno: </label>
+                  <select
+                    value={tarta.relleno}
+                    onChange={(e) => setTarta({ ...tarta, relleno: e.target.value })}
+                  >
+                    {rellenosPastaflora.map((r) => (
+                      <option key={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
-      <div>
-        <label>Ancho (cm): </label>
-        <input
-          type="number"
-          value={pastel.ancho}
-          onChange={(e) => setPastel({ ...pastel, ancho: parseFloat(e.target.value) })}
-        />
-      </div>
-
-      <h2>💰 Precio estimado: ${calcularPrecio()}</h2>
+      <h2>💰 Precio estimado: ${calcularPrecioTarta()}</h2>
 
       <a
         href={`https://wa.me/5493624811896?text=${generarMensaje()}`}
